@@ -25,12 +25,8 @@ def setup_logging(verbose: bool = False) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Fetch app reviews and post new ones to Slack"
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Enable verbose logging"
-    )
+    parser = argparse.ArgumentParser(description="Fetch app reviews and post new ones to Slack")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Enable verbose logging")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -89,12 +85,10 @@ def main() -> int:
         gp_scraper = GooglePlayScraper(gp_config)
         reviews = gp_scraper.fetch_reviews(max_reviews=config.max_reviews_per_run)
         all_reviews.extend(reviews)
-        time.sleep(1) 
+        time.sleep(1)
 
     new_reviews = cache.filter_new(all_reviews)
-    logger.info(
-        f"Found {len(new_reviews)} new reviews out of {len(all_reviews)} total"
-    )
+    logger.info(f"Found {len(new_reviews)} new reviews out of {len(all_reviews)} total")
 
     new_reviews.sort(key=lambda r: r.date, reverse=True)
 
@@ -124,4 +118,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     sys.exit(main())
-

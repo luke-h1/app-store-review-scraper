@@ -56,9 +56,7 @@ class Config:
                     country = parts[1] if len(parts) > 1 and parts[1] else "us"
                     language = parts[2] if len(parts) > 2 else "en"
                     google_play_apps.append(
-                        GooglePlayConfig(
-                            package_id=package_id, country=country, language=language
-                        )
+                        GooglePlayConfig(package_id=package_id, country=country, language=language)
                     )
 
         reviews_cache_file = os.environ.get("REVIEWS_CACHE_FILE", "reviews_cache.json")
@@ -71,4 +69,3 @@ class Config:
             reviews_cache_file=reviews_cache_file,
             max_reviews_per_run=max_reviews,
         )
-

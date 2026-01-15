@@ -85,4 +85,3 @@ class ReviewCache:
     @property
     def size(self) -> int:
         return len(self._seen_ids)
-

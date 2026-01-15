@@ -1,5 +1,3 @@
-import os
-
 import pytest
 
 from app_store_review_scraper.config import AppStoreConfig, Config, GooglePlayConfig
@@ -76,4 +74,3 @@ class TestConfig:
         assert config.google_play_apps[1].package_id == "com.other.app"
         assert config.google_play_apps[1].country == "us"
         assert config.google_play_apps[1].language == "fr"
-

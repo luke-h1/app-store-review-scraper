@@ -1,4 +1,3 @@
-import json
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -88,4 +87,3 @@ class TestReviewCache:
         cache.clear()
         assert cache.size == 0
         assert cache.is_new(sample_review) is True
-

@@ -23,7 +23,7 @@ class AppStoreScraper:
 
     def _get_feed_url(self, page: int = 1) -> str:
         """Build the iTunes RSS feed URL for reviews.
-        
+
         API format: https://itunes.apple.com/{country}/rss/customerreviews/page={page}/id={app_id}/sortBy=mostRecent/json
         """
         return (

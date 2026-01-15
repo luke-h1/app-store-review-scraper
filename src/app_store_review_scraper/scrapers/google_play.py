@@ -145,7 +145,9 @@ class GooglePlayScraper:
 
                     review_date = parse_relative_date(comment_date_str)
 
-                    review_id = f"googleplay_{self.config.package_id}_{user_name}_{review_date.isoformat()}"
+                    review_id = (
+                        f"googleplay_{self.config.package_id}_{user_name}_{review_date.isoformat()}"
+                    )
 
                     reviews.append(
                         Review(
@@ -169,4 +171,3 @@ class GooglePlayScraper:
             logger.error(f"Error fetching Google Play reviews: {e}")
 
         return reviews
-

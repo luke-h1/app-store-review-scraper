@@ -145,4 +145,3 @@ class SlackNotifier:
         except requests.RequestException as e:
             logger.error(f"Failed to send summary to Slack: {e}")
             return False
-
