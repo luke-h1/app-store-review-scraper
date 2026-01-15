@@ -22,9 +22,9 @@ permissions:
 
 env:
   SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-  APP_STORE_APPS: ${{ vars.APP_STORE_APPS }}
-  GOOGLE_PLAY_APPS: ${{ vars.GOOGLE_PLAY_APPS }}
-  MAX_REVIEWS_PER_RUN: ${{ vars.MAX_REVIEWS_PER_RUN || '50' }}
+  APP_STORE_APPS: ${{ secrets.APP_STORE_APPS }}
+  GOOGLE_PLAY_APPS: ${{ secrets.GOOGLE_PLAY_APPS }}
+  MAX_REVIEWS_PER_RUN: ${{ secrets.MAX_REVIEWS_PER_RUN || '50' }}
 
 jobs:
   check-reviews:
