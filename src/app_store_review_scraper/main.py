@@ -106,7 +106,7 @@ def main() -> int:
                 posted_count += 1
                 time.sleep(0.5)
 
-    if not args.no_summary and not args.dry_run:
+    if not args.no_summary and not args.dry_run and posted_count > 0:
         notifier.send_summary(posted_count, total_apps)
 
     if not args.dry_run:
