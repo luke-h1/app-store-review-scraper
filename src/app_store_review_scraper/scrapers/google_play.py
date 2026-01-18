@@ -3,6 +3,7 @@
 Based on: https://serpapi.com/blog/scrape-all-google-play-app-reviews-in-python/
 """
 
+import hashlib
 import logging
 import re
 import time
@@ -81,6 +82,7 @@ class GooglePlayScraper:
         )
 
         reviews = []
+        seen_ids: set[str] = set()
 
         try:
             with sync_playwright() as playwright:
@@ -145,9 +147,16 @@ class GooglePlayScraper:
 
                     review_date = parse_relative_date(comment_date_str)
 
-                    review_id = (
-                        f"googleplay_{self.config.package_id}_{user_name}_{review_date.isoformat()}"
-                    )
+                    normalized_date = review_date.replace(hour=0, minute=0, second=0, microsecond=0)
+                    content_hash = hashlib.md5(
+                        f"{self.config.package_id}_{user_name}_{rating}_{user_comment}_{normalized_date.isoformat()}".encode()
+                    ).hexdigest()[:16]
+                    review_id = f"googleplay_{self.config.package_id}_{content_hash}"
+                    
+                    if review_id in seen_ids:
+                        logger.debug(f"Skipping duplicate review ID within fetch: {review_id}")
+                        continue
+                    seen_ids.add(review_id)
 
                     reviews.append(
                         Review(

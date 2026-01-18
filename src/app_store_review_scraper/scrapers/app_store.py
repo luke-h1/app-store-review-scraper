@@ -52,6 +52,7 @@ class AppStoreScraper:
         )
 
         reviews: list[Review] = []
+        seen_ids: set[str] = set()
         pages_needed = min((max_reviews // self.REVIEWS_PER_PAGE) + 1, self.MAX_PAGES)
 
         for page in range(1, pages_needed + 1):
@@ -142,6 +143,12 @@ class AppStoreScraper:
 
                     # Create unique review ID with app_id prefix
                     unique_id = f"appstore_{self.config.app_id}_{review_id}"
+                    
+                    # Skip if we've already seen this review ID in this fetch
+                    if unique_id in seen_ids:
+                        logger.debug(f"Skipping duplicate review ID within fetch: {unique_id}")
+                        continue
+                    seen_ids.add(unique_id)
                     
                     logger.debug(
                         f"Generated review ID: {unique_id} for user {user_name} "
