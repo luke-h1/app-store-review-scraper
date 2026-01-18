@@ -4,6 +4,7 @@ import sys
 import time
 from pathlib import Path
 
+from app_store_review_scraper.models import Review
 from dotenv import load_dotenv
 
 from .cache import ReviewCache
@@ -87,8 +88,21 @@ def main() -> int:
         all_reviews.extend(reviews)
         time.sleep(1)
 
-    new_reviews = cache.filter_new(all_reviews)
-    logger.info(f"Found {len(new_reviews)} new reviews out of {len(all_reviews)} total")
+    # Deduplicate reviews within this run (by ID) before checking cache
+    seen_in_run: dict[str, Review] = {}
+    for review in all_reviews:
+        if review.id not in seen_in_run:
+            seen_in_run[review.id] = review
+    deduplicated_reviews = list(seen_in_run.values())
+    
+    if len(deduplicated_reviews) < len(all_reviews):
+        logger.info(
+            f"Deduplicated {len(all_reviews) - len(deduplicated_reviews)} "
+            f"duplicate reviews within this run"
+        )
+    
+    new_reviews = cache.filter_new(deduplicated_reviews)
+    logger.info(f"Found {len(new_reviews)} new reviews out of {len(deduplicated_reviews)} total")
 
     new_reviews.sort(key=lambda r: r.date, reverse=True)
 
@@ -103,6 +117,9 @@ def main() -> int:
         else:
             if notifier.send_review(review):
                 cache.mark_seen(review)
+                # Save cache immediately after each successful send to prevent duplicates
+                # if the script crashes or is interrupted
+                cache.save()
                 posted_count += 1
                 time.sleep(0.5)
 

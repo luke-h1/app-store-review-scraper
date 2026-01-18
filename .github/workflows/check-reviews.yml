@@ -48,7 +48,7 @@ jobs:
       - name: Install Playwright browsers
         run: uv run playwright install chromium --with-deps
 
-      - name: Restore reviews cache
+      - name: Restore and save reviews cache
         uses: actions/cache@v4
         with:
           path: reviews_cache.json
@@ -66,10 +66,3 @@ jobs:
             ARGS="$ARGS --clear-cache"
           fi
           uv run review-notifier $ARGS
-
-      - name: Save reviews cache
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: reviews_cache.json
-          key: reviews-cache-${{ github.repository }}
