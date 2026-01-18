@@ -103,25 +103,45 @@ def main() -> int:
     
     new_reviews = cache.filter_new(deduplicated_reviews)
     logger.info(f"Found {len(new_reviews)} new reviews out of {len(deduplicated_reviews)} total")
+    
+    # Log review IDs for debugging
+    if new_reviews and logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"New review IDs: {[r.id for r in new_reviews]}")
 
     new_reviews.sort(key=lambda r: r.date, reverse=True)
 
     posted_count = 0
+    sent_in_this_run: set[str] = set()  # Track reviews sent in this run to prevent duplicates
     for review in new_reviews:
+        # Double-check we haven't already sent this review in this run
+        if review.id in sent_in_this_run:
+            logger.warning(f"Skipping duplicate review ID in this run: {review.id}")
+            continue
+            
+        # Double-check cache one more time before sending (defensive check)
+        if not cache.is_new(review):
+            logger.warning(f"Review {review.id} was marked as new but is in cache, skipping")
+            continue
+            
         if args.dry_run:
             logger.info(
                 f"[DRY RUN] Would post review from {review.user_name} "
                 f"({review.store}, {review.rating}⭐): {review.content[:100]}..."
             )
             posted_count += 1
+            sent_in_this_run.add(review.id)
         else:
             if notifier.send_review(review):
+                sent_in_this_run.add(review.id)
                 cache.mark_seen(review)
                 # Save cache immediately after each successful send to prevent duplicates
                 # if the script crashes or is interrupted
                 cache.save()
+                logger.debug(f"Marked review {review.id} as seen and saved cache")
                 posted_count += 1
                 time.sleep(0.5)
+            else:
+                logger.warning(f"Failed to send review {review.id}, will retry on next run")
 
     if not args.no_summary and not args.dry_run and posted_count > 0:
         notifier.send_summary(posted_count, total_apps)

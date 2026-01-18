@@ -48,7 +48,10 @@ class ReviewCache:
         Returns:
             True if the review is new, False if already seen.
         """
-        return review.id not in self._seen_ids
+        is_new = review.id not in self._seen_ids
+        if not is_new:
+            logger.debug(f"Review {review.id} already in cache (user: {review.user_name}, date: {review.date})")
+        return is_new
 
     def mark_seen(self, review: "Review") -> None:
         """Mark a review as seen.
@@ -56,7 +59,10 @@ class ReviewCache:
         Args:
             review: Review to mark as seen.
         """
+        if review.id in self._seen_ids:
+            logger.warning(f"Review {review.id} was already marked as seen, but marking again")
         self._seen_ids.add(review.id)
+        logger.debug(f"Marked review {review.id} as seen (total cached: {len(self._seen_ids)})")
 
     def filter_new(self, reviews: list["Review"]) -> list["Review"]:
         """Filter a list of reviews to only include new ones.

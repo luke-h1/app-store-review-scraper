@@ -1,6 +1,8 @@
 """App Store review scraper using iTunes RSS API."""
 
+import hashlib
 import logging
+import re
 from datetime import datetime
 
 import requests
@@ -100,7 +102,7 @@ class AppStoreScraper:
 
                 try:
                     # Extract review data
-                    review_id = entry.get("id", {}).get("label", "")
+                    review_id_raw = entry.get("id", {}).get("label", "")
                     user_name = entry.get("author", {}).get("name", {}).get("label", "Unknown")
                     rating = int(entry.get("im:rating", {}).get("label", 0))
                     title = entry.get("title", {}).get("label", "")
@@ -113,8 +115,39 @@ class AppStoreScraper:
                     except ValueError:
                         review_date = datetime.now()
 
-                    # Create unique review ID
+                    # Create unique review ID - use link if available, otherwise use id or hash
+                    # iTunes RSS link field is more reliable than id field
+                    link = entry.get("link", {}).get("attributes", {}).get("href", "")
+                    if link:
+                        # Extract ID from link URL (e.g., https://itunes.apple.com/us/reviews/id1234567890)
+                        link_id_match = re.search(r"/id(\d+)", link)
+                        if link_id_match:
+                            review_id = link_id_match.group(1)
+                        else:
+                            # Use the full link as ID
+                            review_id = link
+                    elif review_id_raw:
+                        # Extract ID from review_id if it's a URL
+                        id_match = re.search(r"/id(\d+)", review_id_raw)
+                        if id_match:
+                            review_id = id_match.group(1)
+                        else:
+                            review_id = review_id_raw
+                    else:
+                        # Fallback: create hash-based ID from content + user + date
+                        content_hash = hashlib.md5(
+                            f"{user_name}{title}{content}{review_date.isoformat()}".encode()
+                        ).hexdigest()[:12]
+                        review_id = f"hash_{content_hash}"
+
+                    # Create unique review ID with app_id prefix
                     unique_id = f"appstore_{self.config.app_id}_{review_id}"
+                    
+                    logger.debug(
+                        f"Generated review ID: {unique_id} for user {user_name} "
+                        f"(raw_id: {review_id_raw[:50] if review_id_raw else 'empty'}, "
+                        f"link: {link[:50] if link else 'none'})"
+                    )
 
                     reviews.append(
                         Review(
