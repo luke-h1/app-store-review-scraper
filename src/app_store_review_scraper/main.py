@@ -4,7 +4,6 @@ import sys
 import time
 from pathlib import Path
 
-from app_store_review_scraper.models import Review
 from dotenv import load_dotenv
 
 from .cache import ReviewCache
@@ -88,21 +87,10 @@ def main() -> int:
         all_reviews.extend(reviews)
         time.sleep(1)
 
-    # Deduplicate reviews within this run (by ID) before checking cache
-    seen_in_run: dict[str, Review] = {}
-    for review in all_reviews:
-        if review.id not in seen_in_run:
-            seen_in_run[review.id] = review
-    deduplicated_reviews = list(seen_in_run.values())
-    
-    if len(deduplicated_reviews) < len(all_reviews):
-        logger.info(
-            f"Deduplicated {len(all_reviews) - len(deduplicated_reviews)} "
-            f"duplicate reviews within this run"
-        )
-    
-    new_reviews = cache.filter_new(deduplicated_reviews)
-    logger.info(f"Found {len(new_reviews)} new reviews out of {len(deduplicated_reviews)} total")
+    # Filter new reviews using the cache (handles both ID and content-based deduplication)
+    # The cache.filter_new method now deduplicates within the batch as well
+    new_reviews = cache.filter_new(all_reviews)
+    logger.info(f"Found {len(new_reviews)} new reviews out of {len(all_reviews)} fetched")
     
     # Log review IDs for debugging
     if new_reviews and logger.isEnabledFor(logging.DEBUG):
